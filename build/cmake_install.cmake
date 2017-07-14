@@ -117,6 +117,7 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/countzero/repos/catkin_ws/build/gtest/cmake_install.cmake")
+  include("/home/countzero/repos/catkin_ws/build/open_rover_serial/cmake_install.cmake")
 
 endif()
 
