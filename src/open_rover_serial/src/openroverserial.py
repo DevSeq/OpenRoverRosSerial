@@ -41,12 +41,54 @@ import rospy
 from wiimote.msg import State
 import serial
 
+BEGINNING = 'B',
+VELOCITY = 'V',
+PWM = 'P',
+GAINS = 'G',
+CURRENT = 'C',
+START = 'S',
+DIRECTION = 'D',
+READ = 'R',
+WRITE = 'W',
+END = '\n',
+
+K = 0.75 * 2
+
+leftwheel  = None
+rightwheel = None
+v_left = 0.0
+v_right = 0.0
+
+def SendDirection_left():
+    forward = True
+    if v_left < 0:
+        forward = False
+
+    leftwheel.write(BEGINNING + DIRECTION + str(int(forward == True)) + END)
+
+def SendDirection_right():
+    forward = True
+    if v_right < 0:
+        forward = False
+    rightwheel.write(BEGINNING + DIRECTION + str(int(forward == True)) + END)
+
+def SendVelocity():
+    leftwheel.write(BEGINNING + VELOCITY + str(int(abs(v_left) * 10)) + END)
+    rightwheel.write(BEGINNING + VELOCITY + str(int(abs(v_right) * 10)) + END)
+
+
+
 def callback(data):
-    rospy.loginfo(rospy.get_caller_id() + 'X: %f Y %f', data.nunchuk_joystick_zeroed[0], data.nunchuk_joystick_zeroed[1])
-    
+    if data.nunchuk_joystick_zeroed[0] > 0.1 or data.nunchuk_joystick_zeroed[1] > 0.1:
+        v_left = data.nunchuk_joystick_zeroed[0] + K * data.nunchuk_joystick_zeroed[1]
+        v_right = data.nunchuk_joystick_zeroed[0] - K * data.nunchuk_joystick_zeroed[1]
+        SendDirection_left()
+        SendDirection_right()
+        SendVelocity()
 
 def listener():
-    ser = serial.Serial('/dev/ttyUSB0')  # open serial port
+    leftwheel  = serial.Serial('/dev/ttyUSB0')  # open serial port
+    rightwheel = serial.Serial('/dev/ttyUSB1')  # open serial port
 
     # In ROS, nodes are uniquely named. If two nodes with the same
     # name are launched, the previous one is kicked off. The
