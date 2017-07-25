@@ -2,18 +2,18 @@
 
 import roslib; roslib.load_manifest('wiimote')
 import rospy
+import math
 from wiimote.msg import State
 from geometry_msgs.msg import Twist
 
-K = 0.75 * 2
 pub = rospy.Publisher('openrover_twist', Twist)
 
 
 def callback(data):
-    if data.nunchuk_joystick_zeroed[0] > 0.1 or data.nunchuk_joystick_zeroed[1] > 0.1:
+    if abs(data.nunchuk_joystick_zeroed[0]) > 0.1 or abs(data.nunchuk_joystick_zeroed[1]) > 0.1:
         msg = Twist()
-        msg.linear.x = data.nunchuk_joystick_zeroed[0] + K * data.nunchuk_joystick_zeroed[1]  #left
-        msg.linear.y = data.nunchuk_joystick_zeroed[0] - K * data.nunchuk_joystick_zeroed[1]  #right
+        msg.linear.x = data.nunchuk_joystick_zeroed[1]
+        msg.linear.y = data.nunchuk_joystick_zeroed[0]
         pub.publish(msg)
 
 

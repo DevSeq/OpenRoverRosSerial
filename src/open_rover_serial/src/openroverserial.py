@@ -16,7 +16,8 @@ READ = 'R',
 WRITE = 'W',
 END = '\n',
 
-K = 0.75 * 2
+K = 0.75 / 2
+scale = 5
 
 left_wheel  = None
 right_wheel = None
@@ -47,8 +48,9 @@ def send_velocity():
 def callback(data):
         global v_left
         global v_right
-        v_left = data.x
-        v_right = data.y
+        v_left  = scale * (data.linear.x - K * data.linear.y)
+        v_right = scale * (data.linear.x + K * data.linear.y)
+        print "v_l {0} v_r {1} v{2} w{3}".format(v_left, v_right, data.linear.x, data.linear.y)
         send_direction_left()
         send_direction_right()
         send_velocity()
