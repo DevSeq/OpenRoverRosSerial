@@ -3,18 +3,10 @@
 import roslib; roslib.load_manifest('wiimote')
 import rospy
 from geometry_msgs.msg import Twist
-import serial
+import serial, time, numpy
+from packets import Packet
+import packets
 
-BEGINNING = 'B',
-VELOCITY = 'V',
-PWM = 'P',
-GAINS = 'G',
-CURRENT = 'C',
-START = 'S',
-DIRECTION = 'D',
-READ = 'R',
-WRITE = 'W',
-END = '\n',
 
 K = 0.75 / 2
 scale = 5
@@ -25,25 +17,6 @@ v_left = 0.0
 v_right = 0.0
 
 
-def send_direction_left():
-    forward = True
-    if v_left < 0:
-        forward = False
-
-    left_wheel.write(BEGINNING + DIRECTION + str(int(forward == True)) + END)
-
-
-def send_direction_right():
-    forward = True
-    if v_right < 0:
-        forward = False
-    right_wheel.write(BEGINNING + DIRECTION + str(int(forward == True)) + END)
-
-
-def send_velocity():
-    left_wheel.write(BEGINNING + VELOCITY + str(int(abs(v_left) * 10)) + END)
-    right_wheel.write(BEGINNING + VELOCITY + str(int(abs(v_right) * 10)) + END)
-
 
 def callback(data):
         global v_left
@@ -51,9 +24,6 @@ def callback(data):
         v_left  = scale * (data.linear.x - K * data.linear.y)
         v_right = scale * (data.linear.x + K * data.linear.y)
         print "v_l {0} v_r {1} v{2} w{3}".format(v_left, v_right, data.linear.x, data.linear.y)
-        send_direction_left()
-        send_direction_right()
-        send_velocity()
 
 
 def listener():

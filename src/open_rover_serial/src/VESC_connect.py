@@ -2,7 +2,7 @@
 This file is a sending/receiving script to the VESC 6
 
 """
-import serial, time, numpy
+import serial, time, numpy, sys, glob
 from packets import Packet
 import packets
 
@@ -10,6 +10,48 @@ CURRENT_CONTROL_ACCURACY = 1e3
 DUTY_CONTROL_ACCURACY = 1e5
 TEMP_ACCURACY = 1e1
 NO_SCALE = 1
+
+COMM_FW_VERSION = 0
+COMM_JUMP_TO_BOOTLOADER = 1
+COMM_ERASE_NEW_APP = 2
+COMM_WRITE_NEW_APP_DATA = 3
+COMM_GET_VALUES = 4
+COMM_SET_DUTY = 5
+COMM_SET_CURRENT = 6
+COMM_SET_CURRENT_BRAKE = 7
+COMM_SET_RPM = 8
+COMM_SET_POS = 9
+COMM_SET_HANDBRAKE = 10
+COMM_SET_DETECT = 11
+COMM_SET_SERVO_POS = 12
+COMM_SET_MCCONF = 13
+COMM_GET_MCCONF = 14
+COMM_GET_MCCONF_DEFAULT = 15
+COMM_SET_APPCONF = 16
+COMM_GET_APPCONF = 17
+COMM_GET_APPCONF_DEFAULT = 18
+COMM_SAMPLE_PRINT = 19
+COMM_TERMINAL_CMD = 20
+COMM_PRINT = 21
+COMM_ROTOR_POSITION = 22
+COMM_EXPERIMENT_SAMPLE = 23
+COMM_DETECT_MOTOR_PARAM = 24
+COMM_DETECT_MOTOR_R_L = 25
+COMM_DETECT_MOTOR_FLUX_LINKAGE = 126
+COMM_DETECT_ENCODER = 26
+COMM_DETECT_HALL_FOC = 28
+COMM_REBOOT = 29
+COMM_ALIVE = 30
+COMM_GET_DECODED_PPM = 31
+COMM_GET_DECODED_ADC = 32
+COMM_GET_DECODED_CHUK = 33
+COMM_FORWARD_CAN = 34
+COMM_SET_CHUCK_DATA =35
+COMM_CUSTOM_APP_DATA = 36
+COMM_NRF_START_PAIRING  = 37
+
+
+
 CURRENT_CONTROL_ID = 6
 DUTY_CONTROL_ID = 5
 ALIVE_ID = 30
@@ -100,6 +142,27 @@ def print_values(packet):
 
 def get_duty_for_counter(counter):
     return min(0.05 * counter, 0.95)
+
+
+def findandmapcontrollers():
+    result = dict()
+    left_key = "left"
+    right_key = "right"
+    if sys.platform.startswith ('linux'):
+        temp_list = glob.glob ('/dev/tty[A-Za-z]*')
+
+
+        for a_port in temp_list:
+
+            try:
+                s = serial.Serial(a_port)
+                s.close()
+                result.append(a_port)
+            except serial.SerialException:
+                pass
+
+    return result
+
 
 
 phase = 0
