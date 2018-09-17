@@ -6,6 +6,11 @@ class Packet:
                     if len(args) is 1, initialise this packet with given bytearray
                     if len(args) is more than 1, initialize this packet with data that corresponds to (number of bits, number, scale)
         """
+        self.phase = 0
+        self.payload = None
+        self.length =  0
+        self.crc = 0
+
         self.index = 0
         if len(args) == 0:
             self.message = bytearray()
@@ -20,6 +25,59 @@ class Packet:
                     self.append_number_16(args[x + 1], args[x + 2])
                 elif args[x] == 32:
                     self.append_number_32(args[x + 1], args[x + 2])
+
+    def process_buffer(self, buffer):
+        """
+        This function processes the given buffer (bytearray). When a packet is received, the function calls the process_packet fucntion
+        :param buffer: The given bytearray to proces
+        :return: None
+        """
+
+        """
+        This is an integer that indicates the state the message reading is in.
+        0: Starting a package read
+        1: Reading payload length - long version
+        2: Reading payload length - both versions
+        3: Reading payload
+        4: Reading CRC checksum - first byte
+        5: Reading CRC checksum - second byte
+        6: Checking checksum
+        """
+
+        for x in range(len(buffer)):
+
+            curr_byte = buffer[x]
+            if self.phase == 0:
+                self.payload = bytearray()
+                self.length = 0
+                self.crc = 0
+                if curr_byte == 2:
+                    self.phase += 2
+                elif curr_byte == 3:
+                    self.phase += 1
+            elif self.phase == 1:
+                length = curr_byte << 8
+                self.phase += 1
+            elif self.phase == 2:
+                self.length |= curr_byte
+                self.phase += 1
+            elif self.phase == 3:
+                self.payload.append(curr_byte)
+                if len(self.payload) == length:
+                    self.phase += 1
+            elif self.phase == 4:
+                self.crc = curr_byte << 8
+                self.phase += 1
+            elif self.phase == 5:
+                self.crc |= curr_byte
+                self.phase += 1
+            elif self.phase == 6:
+                self.phase = 0
+                if curr_byte == 3 and self.calc_crc(self.payload) == self.crc:
+                    process_packet(Packet(payload))
+                    return True
+            else:
+                phase = 0
 
     def get_message(self):
         return self.message

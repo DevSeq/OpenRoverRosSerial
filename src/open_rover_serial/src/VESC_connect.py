@@ -11,46 +11,6 @@ DUTY_CONTROL_ACCURACY = 1e5
 TEMP_ACCURACY = 1e1
 NO_SCALE = 1
 
-COMM_FW_VERSION = 0
-COMM_JUMP_TO_BOOTLOADER = 1
-COMM_ERASE_NEW_APP = 2
-COMM_WRITE_NEW_APP_DATA = 3
-COMM_GET_VALUES = 4
-COMM_SET_DUTY = 5
-COMM_SET_CURRENT = 6
-COMM_SET_CURRENT_BRAKE = 7
-COMM_SET_RPM = 8
-COMM_SET_POS = 9
-COMM_SET_HANDBRAKE = 10
-COMM_SET_DETECT = 11
-COMM_SET_SERVO_POS = 12
-COMM_SET_MCCONF = 13
-COMM_GET_MCCONF = 14
-COMM_GET_MCCONF_DEFAULT = 15
-COMM_SET_APPCONF = 16
-COMM_GET_APPCONF = 17
-COMM_GET_APPCONF_DEFAULT = 18
-COMM_SAMPLE_PRINT = 19
-COMM_TERMINAL_CMD = 20
-COMM_PRINT = 21
-COMM_ROTOR_POSITION = 22
-COMM_EXPERIMENT_SAMPLE = 23
-COMM_DETECT_MOTOR_PARAM = 24
-COMM_DETECT_MOTOR_R_L = 25
-COMM_DETECT_MOTOR_FLUX_LINKAGE = 126
-COMM_DETECT_ENCODER = 26
-COMM_DETECT_HALL_FOC = 28
-COMM_REBOOT = 29
-COMM_ALIVE = 30
-COMM_GET_DECODED_PPM = 31
-COMM_GET_DECODED_ADC = 32
-COMM_GET_DECODED_CHUK = 33
-COMM_FORWARD_CAN = 34
-COMM_SET_CHUCK_DATA =35
-COMM_CUSTOM_APP_DATA = 36
-COMM_NRF_START_PAIRING  = 37
-
-
 
 CURRENT_CONTROL_ID = 6
 DUTY_CONTROL_ID = 5
@@ -59,59 +19,6 @@ REBOOT_ID = 29
 GET_VALUES_ID = 4
 
 '''
-def process_buffer(buffer):
-    """
-    This function processes the given buffer (bytearray). When a packet is received, the function calls the process_packet fucntion
-    :param buffer: The given bytearray to proces
-    :return: None
-    """
-    global phase, payload, length, crc
-    """
-    This is an integer that indicates the state the message reading is in.
-    0: Starting a package read
-    1: Reading payload length - long version
-    2: Reading payload length - both versions
-    3: Reading payload
-    4: Reading CRC checksum - first byte
-    5: Reading CRC checksum - second byte
-    6: Checking checksum
-    """
-
-    for x in range(len(buffer)):
-
-        curr_byte = buffer[x]
-        if phase == 0:
-            payload = bytearray()
-            length = 0
-            crc = 0
-            if curr_byte == 2:
-                phase += 2
-            elif curr_byte == 3:
-                phase += 1
-        elif phase == 1:
-            length = curr_byte << 8
-            phase += 1
-        elif phase == 2:
-            length |= curr_byte
-            phase += 1
-        elif phase == 3:
-            payload.append(curr_byte)
-            if len(payload) == length:
-                phase += 1
-        elif phase == 4:
-            crc = curr_byte << 8
-            phase += 1
-        elif phase == 5:
-            crc |= curr_byte
-            phase += 1
-        elif phase == 6:
-            phase = 0
-            if curr_byte == 3 and packets.calc_crc(payload) == crc:
-                process_packet(Packet(payload))
-                return True
-        else:
-            phase = 0
-
 
 def process_packet(packet):
     if packet.get_next_number(8, NO_SCALE, True) == GET_VALUES_ID:
