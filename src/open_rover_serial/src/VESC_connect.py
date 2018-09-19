@@ -3,63 +3,20 @@ This file is a sending/receiving script to the VESC 6
 
 """
 import serial, time, numpy, sys, glob
+from time import sleep
 from packets import Packet
+from commands import Commands
+from datatypes import Scale, PacketID
 import packets
 
-CURRENT_CONTROL_ACCURACY = 1e3
-DUTY_CONTROL_ACCURACY = 1e5
-TEMP_ACCURACY = 1e1
-NO_SCALE = 1
-
-
-CURRENT_CONTROL_ID = 6
-DUTY_CONTROL_ID = 5
-ALIVE_ID = 30
-REBOOT_ID = 29
-GET_VALUES_ID = 4
 
 '''
-
-def process_packet(packet):
-    if packet.get_next_number(8, NO_SCALE, True) == GET_VALUES_ID:
-        packet.index += 22
-        data[counter].append(packet.get_next_number(32, 1))
-
-
-def print_values(packet):
-    if packet.get_next_number(8, NO_SCALE, True) == GET_VALUES_ID:
-        print("Temperature mosfet[°C]: " + str(packet.get_next_number(16, TEMP_ACCURACY)))
-        print("Temperature motor[°C] : " + str(packet.get_next_number(16, TEMP_ACCURACY)))
-        print("Current motor[A]: " + str(packet.get_next_number(32, 100)))
-        print("Current VESC[A]: " + str(packet.get_next_number(32, 100)))
-        print("D axis current[A]: " + str(packet.get_next_number(32, 100)))
-        print("Q axis current[A]: " + str(packet.get_next_number(32, 100)))
-        print("Duty[%]: " + str(packet.get_next_number(16, 1000)))
-        print("ERPM[RPM]: " + str(packet.get_next_number(32, 1)))
-        print("Voltage VESC[V]: " + str(packet.get_next_number(16, 10)))
-        print("Drawn charge[mAh]: " + str(packet.get_next_number(32, 10000)))
-        print("Charged charge[mAh]: " + str(packet.get_next_number(32, 10000)))
-        print("Drawn power[Wh]: " + str(packet.get_next_number(32, 10000)))
-        print("Charged power[Wh]: " + str(packet.get_next_number(32, 10000)))
-        print("The Tachometer value = number of revolutions*3*#motor poles")
-        print("Tachometer value[motor steps]: " + str(packet.get_next_number(32, 1)))
-        print("Tachometer absolute value[motor steps]: " + str(packet.get_next_number(32, 1)))
-        print("Fault code: " + str(packet.get_next_number(8, 1)))
-
-
-def get_duty_for_counter(counter):
-    return min(0.05 * counter, 0.95)
-
-
-
-
-
 def test():
     phase = 0
     payload = bytearray()
     length = 0
     crc = 0
-    vesc_usb = serial.Serial('COM3', 38400, timeout=0.1)
+    
     time.sleep(1)  # give the connection a second to settle
 
     current_control = Packet(8, CURRENT_CONTROL_ID, NO_SCALE, 32, 0.3, CURRENT_CONTROL_ACCURACY)
@@ -104,14 +61,30 @@ def findandmapcontrollers():
     result = dict()
     left_key = "left"
     right_key = "right"
+    get_data = Packet(8, PacketID.GET_VALUES, Scale.NONE)
+    alive = Packet(8, PacketID.ALIVE, Scale.NONE)
+    commands = Commands()
+
     if sys.platform.startswith ('linux'):
         temp_list = glob.glob('/dev/tty[A]*')
 
         for a_port in temp_list:
 
             try:
-                s = serial.Serial(a_port)
-                s.close()
+                vesc_usb = serial.Serial(a_port, 115200, timeout=0.1)
+                sleep(2)
+                get_data.send(vesc_usb)
+                sleep(0.5)
+                if vesc_usb.in_waiting > 5:
+                    buffer = Packet()
+                    if buffer.process_buffer(vesc_usb.read_all()):
+                        commands.process_packet(buffer.goodpacket)
+                        if commands.mcData.vesc_id == 100:
+                            result[left_key] = a_port
+                        elif commands.mcData.vesc_id == 200:
+                            result[right_key] = a_port
+
+                vesc_usb.close()
                 result.append(a_port)
             except serial.SerialException:
                 pass

@@ -8,8 +8,9 @@ class Packet:
         """
         self.phase = 0
         self.payload = None
-        self.length =  0
+        self.length = 0
         self.crc = 0
+        self.goodpacket = None
 
         self.index = 0
         if len(args) == 0:
@@ -56,14 +57,14 @@ class Packet:
                 elif curr_byte == 3:
                     self.phase += 1
             elif self.phase == 1:
-                length = curr_byte << 8
+                self.length = curr_byte << 8
                 self.phase += 1
             elif self.phase == 2:
                 self.length |= curr_byte
                 self.phase += 1
             elif self.phase == 3:
                 self.payload.append(curr_byte)
-                if len(self.payload) == length:
+                if len(self.payload) == self.length:
                     self.phase += 1
             elif self.phase == 4:
                 self.crc = curr_byte << 8
@@ -73,11 +74,13 @@ class Packet:
                 self.phase += 1
             elif self.phase == 6:
                 self.phase = 0
-                if curr_byte == 3 and self.calc_crc(self.payload) == self.crc:
-                    process_packet(Packet(payload))
+                if curr_byte == 3 and calc_crc(self.payload) == self.crc:
+                    self.goodpacket = Packet(self.payload)
                     return True
+                else:
+                    return False
             else:
-                phase = 0
+                self.phase = 0
 
     def get_message(self):
         return self.message
@@ -105,11 +108,14 @@ class Packet:
 
     def get_next_number(self, bits, scale, proceed=True):
         if bits == 8:
-            return self.get_next_number_8(scale, proceed)
+            return self.get_next_number_8(int(scale), proceed)
         elif bits == 16:
-            return self.get_next_number_16(scale, proceed)
+            return self.get_next_number_16(int(scale), proceed)
         elif bits == 32:
-            return self.get_next_number_32(scale, proceed)
+            return self.get_next_number_32(int(scale), proceed)
+
+    def length_left(self):
+        return len(self.message[self.index:])
 
     def append_number_8(self, number, scale):
         res = int(number * scale)

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class PacketID(Enum):
+class PacketID(IntEnum):
     FW_VERSION = 0
     JUMP_TO_BOOTLOADER = 1
     ERASE_NEW_APP = 2
@@ -42,7 +42,7 @@ class PacketID(Enum):
     NRF_START_PAIRING = 37
     
     
-class FaultCode(Enum):
+class FaultCode(IntEnum):
     NONE = 0
     OVER_VOLTAGE = 1
     UNDER_VOLTAGE = 2
@@ -52,14 +52,14 @@ class FaultCode(Enum):
     OVER_TEMP_MOTOR = 6
 
 
-class Scale(Enum):
+class Scale(IntEnum):
     NONE = 1
-    E1   = 1e1
-    E2   = 1e2
-    E3   = 1e3
-    E4   = 1e4
-    E5   = 1e5
-    E6   = 1e6
+    E1   = 10
+    E2   = 100
+    E3   = 1000
+    E4   = 10000
+    E5   = 100000
+    E6   = 1000000
 
 
 class MotorControllerData:
