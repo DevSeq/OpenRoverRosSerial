@@ -2,8 +2,9 @@
 This file is a sending/receiving script to the VESC 6
 
 """
-import serial, time, numpy, sys, glob
+import serial, sys, glob
 from time import sleep
+
 from packets import Packet
 from commands import Commands
 from datatypes import Scale, PacketID
@@ -55,16 +56,49 @@ def test():
     text_file.close()
 
 '''
+result = dict()
+left_key = "left"
+right_key = "right"
+commands = Commands()
 
-
-def findandmapcontrollers():
-    result = dict()
-    left_key = "left"
-    right_key = "right"
+def setandmonitorPWM():
     get_data = Packet(8, PacketID.GET_VALUES, Scale.NONE)
     alive = Packet(8, PacketID.ALIVE, Scale.NONE)
-    commands = Commands()
 
+    counter = 30
+    if left_key in result:
+        vesc_usb = serial.Serial(result[left_key], 115200, timeout=0.1)
+        vesc_usb.flush()
+        sleep(2)
+
+        while(counter > 0):
+            sleep(0.2)
+            counter -= 1
+            Packet(8, PacketID.SET_DUTY, Scale.NONE, 32, 0.50, Scale.E5).send(vesc_usb)
+            sleep(0.3)
+            #alive.send(vesc_usb)
+            #sleep(0.3)
+            get_data.send(vesc_usb)
+            sleep(0.5)
+            if vesc_usb.in_waiting > 5:
+                buffer = Packet()
+                converted = [int(elem.encode("hex"), 16) for elem in vesc_usb.read_all()]
+                if buffer.process_buffer(converted):
+                    commands.process_packet(buffer.goodpacket)
+                    print "PWM:", commands.mcData.duty_now
+                    print "RPM:",commands.mcData.rpm
+                    print "Counter", counter
+
+    vesc_usb.close()
+
+
+''' values from spinning motor
+[2, 59, 4, 1, 100, 252, 188, 255, 255, 255, 238, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 244, 0, 0, 7, 128, 1, 109, 0, 0, 0, 156, 0, 0, 0, 0, 0, 0, 22, 44, 0, 0, 0, 24, 0, 1, 14, 20, 0, 1, 48, 94, 0, 0, 0, 0, 0, 100, 38, 197, 3]
+'''
+
+def findandmapcontrollers():
+
+    get_data = Packet(8, PacketID.GET_VALUES, Scale.NONE)
     if sys.platform.startswith ('linux'):
         temp_list = glob.glob('/dev/tty[A]*')
 
@@ -72,12 +106,14 @@ def findandmapcontrollers():
 
             try:
                 vesc_usb = serial.Serial(a_port, 115200, timeout=0.1)
+                vesc_usb.flush()
                 sleep(2)
                 get_data.send(vesc_usb)
                 sleep(0.5)
                 if vesc_usb.in_waiting > 5:
                     buffer = Packet()
-                    if buffer.process_buffer(vesc_usb.read_all()):
+                    converted = [int(elem.encode("hex"), 16) for elem in vesc_usb.read_all()]
+                    if buffer.process_buffer(converted):
                         commands.process_packet(buffer.goodpacket)
                         if commands.mcData.vesc_id == 100:
                             result[left_key] = a_port
@@ -85,7 +121,6 @@ def findandmapcontrollers():
                             result[right_key] = a_port
 
                 vesc_usb.close()
-                result.append(a_port)
             except serial.SerialException:
                 pass
 
@@ -94,3 +129,4 @@ def findandmapcontrollers():
 if __name__ == '__main__':
     print "Test!!"
     findandmapcontrollers()
+    setandmonitorPWM()
