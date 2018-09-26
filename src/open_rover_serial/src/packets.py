@@ -90,21 +90,21 @@ class Packet:
             raise Exception("Error unpacking message: message not long enough")
         if proceed:
             self.index += 1
-        return self.message[self.index - 1] / scale
+        return self.message[self.index - 1] /  float(scale)
 
     def get_next_number_16(self, scale, proceed):
         if len(self.message) < 2:
             raise Exception("Error unpacking message: message not long enough")
         if proceed:
             self.index += 2
-        return (self.message[self.index - 2] << 8 | self.message[self.index - 1]) / scale
+        return (self.message[self.index - 2] << 8 | self.message[self.index - 1]) /  float(scale)
 
     def get_next_number_32(self, scale, proceed):
         if len(self.message) < 4:
             raise Exception("Error unpacking message: message not long enough")
         if proceed:
             self.index += 4
-        return (self.message[self.index - 4] << 24 | self.message[self.index - 3] << 16 | self.message[self.index - 2] << 8 | self.message[self.index - 1]) / scale
+        return (self.message[self.index - 4] << 24 | self.message[self.index - 3] << 16 | self.message[self.index - 2] << 8 | self.message[self.index - 1]) / float(scale)
 
     def get_next_number(self, bits, scale, proceed=True):
         if bits == 8:
