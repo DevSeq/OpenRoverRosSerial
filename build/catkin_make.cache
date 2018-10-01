@@ -1,2 +1,2 @@
 open_rover_serial
--DCATKIN_DEVEL_PREFIX=/home/countzero/repos/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/countzero/repos/catkin_ws/install -G Unix Makefiles
+-DCATKIN_DEVEL_PREFIX=/opt/repos/OpenRoverRosSerial/devel -DCMAKE_INSTALL_PREFIX=/opt/repos/OpenRoverRosSerial/install -G Unix Makefiles

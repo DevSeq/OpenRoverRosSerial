@@ -1,2 +1,2 @@
 - setup-file:
-    local-name: /home/countzero/repos/catkin_ws/devel/setup.sh
+    local-name: /opt/repos/OpenRoverRosSerial/devel/setup.sh

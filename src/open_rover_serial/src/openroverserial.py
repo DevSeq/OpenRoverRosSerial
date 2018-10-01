@@ -17,10 +17,20 @@ v_right = 0.0
 
 
 def callback(data):
-    v_left  = scale * (data.linear.x - K * data.linear.y)
-    v_right = scale * (data.linear.x + K * data.linear.y)
-    print "v_l {0} v_r {1} v{2} w{3}".format(v_left, v_right, data.linear.x, data.linear.y)
-    vesc.setandmonitorPWM(v_left)
+    global v_left
+    old_left = v_left
+    v_left  = (data.linear.x - K * data.linear.y)
+    v_right = (data.linear.x + K * data.linear.y)
+
+    diff = abs(old_left - v_left)
+
+    if diff < 0.05:
+        v_left = old_left
+
+    if abs(v_left) >= 0.1 and abs(v_left) <= 0.90:
+        print "v_l {0} ".format(v_left)
+        vesc.setandmonitorPWM(v_left)
+
 
 
 def listener():
