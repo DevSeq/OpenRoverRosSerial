@@ -10,7 +10,7 @@ pub = rospy.Publisher('openrover_twist', Twist, queue_size=10)
 
 
 def callback(data):
-    if abs(data.nunchuk_joystick_zeroed[0]) > 0.001 or abs(data.nunchuk_joystick_zeroed[1]) > 0.001:
+    if abs(data.nunchuk_joystick_zeroed[0]) > 0.0001 or abs(data.nunchuk_joystick_zeroed[1]) > 0.0001:
         msg = Twist()
         msg.linear.x = data.nunchuk_joystick_zeroed[1]
         msg.linear.y = data.nunchuk_joystick_zeroed[0]
