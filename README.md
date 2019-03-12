@@ -24,10 +24,10 @@ echo $ROS_PACKAGE_PATH
 
 Four windows: roscore, wiimote, wiiconverter, openroverserial
 
-roscore
-rosrun open_rover_serial openroverserial.py
-rosrun wiimote wiimote_node.py
-rosrun open_rover_serial openroverserial.py
+* roscore &
+* rosrun open_rover_serial wiimoteconverter.py
+* rosrun wiimote wiimote_node.py
+* rosrun open_rover_serial openroverserial.py
 
 
 
