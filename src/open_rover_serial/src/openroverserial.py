@@ -7,15 +7,12 @@ from vesc import Vesc
 import time
 
 
-
-
-
-
 K = 0.75 / 2
 scale = 5
 v_left = 0.0
 v_right = 0.0
 current_time = 0
+
 
 def clamp(n, smallest, largest): return max(smallest, min(n, largest))
 
@@ -36,13 +33,13 @@ def callback(data):
 
     current_time = time.clock() #time.process_time()
     delta_t = abs(current_time - old_time)
-    if abs(v_left) > 0.05 and  abs(v_right) > 0.05:
+    if abs(v_left) >= 0.05 and  abs(v_right) >= 0.05:
         print "v_l {0} ".format(v_left)
         print "v_r {0} ".format(v_right)
         vesc.setandmonitorPWM(v_left, v_right)
     elif delta_t > 0.1:
         vesc.setandmonitorPWM(0.0, 0.0)
-    elif v_left < 0.01 and v_right < 0.01:
+    elif v_left < 0.05 and v_right < 0.05:
         vesc.setandmonitorPWM(0.0, 0.0)
 
 
